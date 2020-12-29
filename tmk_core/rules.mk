@@ -93,7 +93,7 @@ endif
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 ifneq ($(strip $(ALLOW_WARNINGS)), yes)
-    CFLAGS += -Werror
+#    CFLAGS += -Werror
 endif
 #CFLAGS += -mshort-calls
 #CFLAGS += -fno-unit-at-a-time
@@ -120,7 +120,7 @@ CXXFLAGS += -w
 CXXFLAGS += -Wall
 CXXFLAGS += -Wundef
 ifneq ($(strip $(ALLOW_WARNINGS)), yes)
-    CXXFLAGS += -Werror
+#    CXXFLAGS += -Werror
 endif
 #CXXFLAGS += -mshort-calls
 #CXXFLAGS += -fno-unit-at-a-time

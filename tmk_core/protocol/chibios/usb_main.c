@@ -27,7 +27,7 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "kint36.h"
+#include "kint41.h"
 
 #include "usb_main.h"
 
@@ -108,7 +108,7 @@ static const USBDescriptor *usb_get_descriptor_cb(USBDriver *usbp, uint8_t dtype
 
 #ifndef KEYBOARD_SHARED_EP
 /* keyboard endpoint state structure */
-static USBInEndpointState kbd_ep_state;
+static USBInEndpointState kbd_ep_state __attribute__ ((used, aligned(32)));
 /* keyboard endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig kbd_ep_config = {
     USB_EP_MODE_TYPE_INTR, /* Interrupt EP */
@@ -126,7 +126,7 @@ static const USBEndpointConfig kbd_ep_config = {
 
 #if defined(MOUSE_ENABLE) && !defined(MOUSE_SHARED_EP)
 /* mouse endpoint state structure */
-static USBInEndpointState mouse_ep_state;
+static USBInEndpointState mouse_ep_state __attribute__ ((used, aligned(32)));
 
 /* mouse endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig mouse_ep_config = {
@@ -145,7 +145,7 @@ static const USBEndpointConfig mouse_ep_config = {
 
 #ifdef SHARED_EP_ENABLE
 /* shared endpoint state structure */
-static USBInEndpointState shared_ep_state;
+static USBInEndpointState shared_ep_state __attribute__ ((used, aligned(32)));
 
 /* shared endpoint initialization structure (IN) - see USBEndpointConfig comment at top of file */
 static const USBEndpointConfig shared_ep_config = {
@@ -465,7 +465,7 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
 #ifdef NKRO_ENABLE
                             keymap_config.nkro = !!keyboard_protocol;
                             if (!keymap_config.nkro && keyboard_idle) {
-#else  /* NKRO_ENABLE */
+#else /* NKRO_ENABLE */
                             if (keyboard_idle) {
 #endif /* NKRO_ENABLE */
                                 /* arm the idle timer if boot protocol & idle */
@@ -483,7 +483,7 @@ static bool usb_request_hook_cb(USBDriver *usbp) {
                                                         /* arm the timer */
 #ifdef NKRO_ENABLE
                         if (!keymap_config.nkro && keyboard_idle) {
-#else  /* NKRO_ENABLE */
+#else /* NKRO_ENABLE */
                         if (keyboard_idle) {
 #endif /* NKRO_ENABLE */
                             osalSysLockFromISR();
@@ -538,6 +538,7 @@ static const USBConfig usbcfg = {
  * Initialize the USB driver
  */
 void init_usb_driver(USBDriver *usbp) {
+    printf_debug("init_usb_driver(), num = %d\n", NUM_USB_DRIVERS);
     for (int i = 0; i < NUM_USB_DRIVERS; i++) {
         QMKUSBDriver *driver                     = &drivers.array[i].driver;
         drivers.array[i].in_ep_config.in_state   = &drivers.array[i].in_ep_state;
@@ -552,10 +553,15 @@ void init_usb_driver(USBDriver *usbp) {
      * Note, a delay is inserted in order to not have to disconnect the cable
      * after a reset.
      */
+    printf_debug("before usbDisconnectBus\n");
     usbDisconnectBus(usbp);
+    printf_debug("after usbDisconnectBus\n");
     wait_ms(1500);
+    printf_debug("after wait_ms(1500)\n");
     usbStart(usbp, &usbcfg);
+    printf_debug("after usbStart(usbp)\n");
     usbConnectBus(usbp);
+    printf_debug("after usbConnectBus(usbp)\n");
 
     chVTObjectInit(&keyboard_idle_timer);
 }
@@ -597,7 +603,7 @@ static void keyboard_idle_timer_cb(void *arg) {
 
 #ifdef NKRO_ENABLE
     if (!keymap_config.nkro && keyboard_idle && keyboard_protocol) {
-#else  /* NKRO_ENABLE */
+#else /* NKRO_ENABLE */
     if (keyboard_idle && keyboard_protocol) {
 #endif /* NKRO_ENABLE */
         /* TODO: are we sure we want the KBD_ENDPOINT? */
@@ -646,7 +652,7 @@ void send_keyboard(report_keyboard_t *report) {
         usbStartTransmitI(&USB_DRIVER, SHARED_IN_EPNUM, (uint8_t *)report, sizeof(struct nkro_report));
     } else
 #endif /* NKRO_ENABLE */
-    {  /* regular protocol */
+    { /* regular protocol */
         /* need to wait until the previous packet has made it through */
         /* busy wait, should be short and not very common */
         if (usbGetTransmitStatusI(&USB_DRIVER, KEYBOARD_IN_EPNUM)) {
@@ -713,7 +719,7 @@ void send_mouse(report_mouse_t *report) {
     osalSysUnlock();
 }
 
-#else  /* MOUSE_ENABLE */
+#else /* MOUSE_ENABLE */
 void send_mouse(report_mouse_t *report) { (void)report; }
 #endif /* MOUSE_ENABLE */
 
@@ -793,7 +799,7 @@ void console_task(void) {
     } while (size > 0);
 }
 
-#else  /* CONSOLE_ENABLE */
+#else /* CONSOLE_ENABLE */
 int8_t sendchar(uint8_t c) {
     (void)c;
     return 0;

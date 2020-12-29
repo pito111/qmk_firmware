@@ -139,15 +139,223 @@ void boardInit(void) {
     board_init();
 }
 
+static inline void IOMUXC_SetPinMux(uint32_t muxRegister,
+                                    uint32_t muxMode,
+                                    uint32_t inputRegister,
+                                    uint32_t inputDaisy,
+                                    uint32_t configRegister,
+                                    uint32_t inputOnfield)
+{
+    printf_debug("val = %x\n",         IOMUXC_SW_MUX_CTL_PAD_MUX_MODE(muxMode) | IOMUXC_SW_MUX_CTL_PAD_SION(inputOnfield));
+    *((volatile uint32_t *)muxRegister) =
+        IOMUXC_SW_MUX_CTL_PAD_MUX_MODE(muxMode) | IOMUXC_SW_MUX_CTL_PAD_SION(inputOnfield);
+
+    if (inputRegister)
+    {
+        *((volatile uint32_t *)inputRegister) = inputDaisy;
+    }
+}
+
+extern uint8_t bit_by_index[];
+extern uint8_t SW_MUX_CTL_PAD_by_index[];
+extern uint8_t SW_PAD_CTL_PAD_by_index[];
+
+void my_setpadmode(ioportid_t port,
+                         uint8_t pad,
+                         iomode_t mode) {
+  // 42000000 IMXRT_GPIO6
+  printf_debug("my_setpadmode port=%x, pad=%d, mode=%d)\n", port, pad, mode);
+  osalDbgAssert(pad < PADS_PER_PORT, "pal_lld_setpadmode() #1, invalid pad");
+
+// see IMXRT1060RM Section 12.4.3 GPIO programming
+
+// Interrupt Mask Register (IMR)
+    port->IMR &= ~((uint32_t) 1 << bit_by_index[pad]);
+
+
+// All GPIOs are on mode ALT5 as per Chapter 10, External Signals and Pin Multiplexing, Table 10-1
+    const int altMode = 5;
+
+// 0000 10B0 = 1000010110000b
+//                         ^ slew rate
+//                       ^^ reserved
+//                    ^^^ drive strength = DSE_6
+//                  ^^ speed = medium
+//               ^^^ reserved
+//              ^ open drain disabled
+//             ^ pull/keep enable
+printf_debug("padctl = %x\n", IOMUXC->SW_PAD_CTL_PAD[SW_PAD_CTL_PAD_by_index[pad]]);
+
+  switch (mode) {
+  case PAL_MODE_RESET:
+  case PAL_MODE_INPUT:
+  case PAL_MODE_OUTPUT_PUSHPULL:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(altMode);
+    // need to always set PAD_CTL in case the pin was configured as input before
+    IOMUXC->SW_PAD_CTL_PAD[SW_PAD_CTL_PAD_by_index[pad]] =
+        IOMUXC_SW_PAD_CTL_PAD_DSE(6);
+    break;
+
+  case PAL_MODE_OUTPUT_OPENDRAIN:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(altMode);
+    //IOMUXC->SW_PAD_CTL_PAD[SW_PAD_CTL_PAD_by_index[pad]] =
+    //  IOMUXC_SW_PAD_CTL_PAD_ODE(1); /* Open Drain Enable */
+    break;
+
+  case PAL_MODE_INPUT_PULLUP:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(altMode);
+
+    //IOMUXC->SW_PAD_CTL_PAD[SW_PAD_CTL_PAD_by_index[pad]] =
+    //  IOMUXC_SW_PAD_CTL_PAD_PKE(1) | /* Pull/Keep Enable */
+    //  IOMUXC_SW_PAD_CTL_PAD_PUS(1) | /* Pull Up/Down Config: 47k pull up */
+    //  IOMUXC_SW_PAD_CTL_PAD_PUE(1); /* Pull/Keep Select: pull */
+
+      break;
+
+  case PAL_MODE_INPUT_PULLDOWN:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(altMode);
+
+    IOMUXC->SW_PAD_CTL_PAD[SW_PAD_CTL_PAD_by_index[pad]] =
+      IOMUXC_SW_PAD_CTL_PAD_PKE(1) | /* Pull/Keep Enable */
+      IOMUXC_SW_PAD_CTL_PAD_PUS(0) | /* Pull Up/Down Config: 100k pull dn */
+      IOMUXC_SW_PAD_CTL_PAD_PUE(1); /* Pull/Keep Select: pull */
+      break;
+
+  case PAL_MODE_UNCONNECTED:
+  case PAL_MODE_INPUT_ANALOG:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(altMode);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_1:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(1);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_2:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(2);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_3:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(3);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_4:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(4);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_5:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(5);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_6:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(6);
+    break;
+
+  case PAL_MODE_ALTERNATIVE_7:
+    IOMUXC->SW_MUX_CTL_PAD[SW_MUX_CTL_PAD_by_index[pad]] =
+      PIN_MUX_ALTERNATIVE(7);
+    break;
+  }
+
+    // GPIO direction register (GDIR)
+  if (mode == PAL_MODE_OUTPUT_PUSHPULL)
+    port->GDIR |= ((uint32_t) 1 << bit_by_index[pad]);
+  else
+    port->GDIR &= ~((uint32_t) 1 << bit_by_index[pad]);
+
+}
 /* Main thread
  */
 int main(void) {
+    printf_debug("main()\n");
+    delay(600000000);  // 1s
     /* ChibiOS/RT init */
     halInit();
     chSysInit();
 
+    printf_debug_init();
+    printf_debug("printf_debug\r\n");
+    printf("printf\r\n");
+
 #ifdef STM32_EEPROM_ENABLE
     EEPROM_Init();
+#endif
+
+#if 0 /* Button test program */
+    // set row pin as output
+    // write row pin low
+
+    ioportid_t col_line = LINE_PIN21;
+    palSetLineMode(col_line, PAL_MODE_INPUT_PULLUP); // setPinInputHigh
+    for (;;) {
+        printf_debug("readLine = %d\n", palReadLine(col_line));    // high
+        delay(600000000);          // 1s
+    }
+
+#endif
+
+// ROW_F2
+// #define MATRIX_ROW_PINS {LINE_PIN21}
+// COL_3
+// #define MATRIX_COL_PINS {LINE_PIN20}
+
+#if 0 /* GPIO test program */
+    ioportid_t line = LINE_PIN21;
+    palSetLineMode(line, PAL_MODE_OUTPUT_PUSHPULL);
+    for (;;) {
+        palSetLine(line);    // high
+        delay(600000000);          // 1s
+        palClearLine(line);  // low
+        delay(600000000);          // 1s
+    }
+#endif /* LED_HACK */
+
+#if 0 /* GPIO connection test program */
+    ioportid_t write_line = LINE_PIN21;
+    ioportid_t read_line = LINE_PIN20;
+    palSetLineMode(write_line, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetLineMode(read_line, PAL_MODE_INPUT_PULLUP);
+    for (;;) {
+        printf_debug("\n\nsetting high\n");
+        palSetLine(write_line);    // high
+        printf_debug("readLine = %d\n", palReadLine(read_line));
+        delay(600000000);          // 1s
+        printf_debug("readLine = %d\n", palReadLine(read_line));
+        printf_debug("setting low\n");
+        palClearLine(write_line);  // low
+        printf_debug("readLine = %d\n", palReadLine(read_line));
+        delay(600000000);          // 1s
+        printf_debug("readLine = %d\n", palReadLine(read_line));
+    }
+#endif
+
+#if 0 /* matrix scan test program */
+    ioportid_t write_line = LINE_PIN21;
+    ioportid_t read_line = LINE_PIN20;
+    palSetLineMode(write_line, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetLineMode(read_line, PAL_MODE_INPUT_PULLUP);
+    for (;;) {
+        printf_debug("\n\nselect row\n");
+        palSetLineMode(write_line, PAL_MODE_OUTPUT_PUSHPULL);
+        palClearLine(write_line);
+        printf_debug("readLine1 = %d\n", palReadLine(read_line));
+        printf_debug("readLine2 = %d\n", palReadLine(read_line));
+        palSetLine(write_line);
+        //my_setpadmode(PAL_PORT(write_line), PAL_PAD(write_line), PAL_MODE_INPUT_PULLUP);
+
+        palSetLineMode(write_line, PAL_MODE_INPUT_PULLUP);
+        delay(600000000);          // 1s
+    }
 #endif
 
     // TESTING
@@ -156,7 +364,9 @@ int main(void) {
     keyboard_setup();
 
     /* Init USB */
+    printf_debug("init_usb_driver() before, addr = %x\n", &USB_DRIVER);
     init_usb_driver(&USB_DRIVER);
+    printf_debug("init_usb_driver() after\n");
 
 #ifdef MIDI_ENABLE
     setup_midi();
@@ -245,6 +455,8 @@ int main(void) {
 #endif
 
         keyboard_task();
+                //delay(600000000);          // 1s
+
 #ifdef CONSOLE_ENABLE
         console_task();
 #endif
