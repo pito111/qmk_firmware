@@ -27,7 +27,7 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "kint41.h"
+#include "bbts40.h"
 
 #include "usb_main.h"
 
