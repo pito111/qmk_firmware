@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config_common.h"
 
 /* USB Device descriptor parameter */
-#define VENDOR_ID       0xFEED
+#define VENDOR_ID       0x16C0 // Van Ooijen Technische Informatica
+#define PRODUCT_ID      0x27DB // Keyboard
 #define MANUFACTURER    "https://github.com/pito111"
 #define PRODUCT         Breadboard development keyboard with microswitches
 #define DESCRIPTION     A custom keyboard

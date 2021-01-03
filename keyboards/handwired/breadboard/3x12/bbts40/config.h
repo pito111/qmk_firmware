@@ -6,8 +6,8 @@
 /* USB Device descriptor parameter */
 // #undef VENDOR_ID
 // #define VENDOR_ID 0xFEED
-#undef PRODUCT_ID
-#define PRODUCT_ID 0x6262
+// #undef PRODUCT_ID
+// #define PRODUCT_ID 0x6262
 #undef DEVICE_VER
 #define DEVICE_VER 0x0001  // 0 or 1?
 #undef MANUFACTURER
