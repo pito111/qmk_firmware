@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define VENDOR_ID       0x16C0 // Van Ooijen Technische Informatica
 #define PRODUCT_ID      0x27DB // Keyboard
 #define MANUFACTURER    "https://github.com/pito111"
-#define PRODUCT         Breadboard development keyboard with microswitches
+#define PRODUCT         "74 key (60% + F-keys) modified ISO keyboard"
 #define DESCRIPTION     A custom keyboard
 
 // Mouse
@@ -131,8 +131,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define NO_ACTION_MACRO
 //#define NO_ACTION_FUNCTION
 
-#ifdef SUBPROJECT_bbts40
-#    include "bbts40/config.h"
+#ifdef SUBPROJECT_sk74key_modified_iso
+#    include "sk74key_modified_iso/config.h"
 #endif
 
 #endif

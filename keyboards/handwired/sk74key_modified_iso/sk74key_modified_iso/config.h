@@ -1,5 +1,5 @@
-#ifndef BBTS40_CONFIG_H
-#define BBTS40_CONFIG_H
+#ifndef SK74KEY_MODIFIED_ISO_CONFIG_H
+#define SK74KEY_MODIFIED_ISO_CONFIG_H
 
 #include "../config.h"
 

@@ -1,8 +1,8 @@
-#ifndef BREADBOARD_H
-#define BREADBOARD_H
+#ifndef SK74KEY_MODIFIED_ISO_H
+#define SK74KEY_MODIFIED_ISO_H
 
-#ifdef KEYBOARD_breadboard_3x12_bbts40
-#    include "bbts40.h"
+#ifdef KEYBOARD_sk74key_modified_iso_sk74key_modified_iso
+#    include "sk74key_modified_iso.h"
 #endif
 
 #include "quantum.h"

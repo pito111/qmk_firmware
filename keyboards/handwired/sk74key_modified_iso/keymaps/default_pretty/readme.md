@@ -1,1 +1,1 @@
-# The default keymap for breadboard devel keyboard
+# The default keymap for sk74key_modified_iso keyboard

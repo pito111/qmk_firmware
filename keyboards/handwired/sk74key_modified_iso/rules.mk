@@ -29,7 +29,7 @@ UNICODE_ENABLE = no        # Unicode
 BLUETOOTH_ENABLE = no      # Enable Bluetooth with the Adafruit EZ-Key HID
 AUDIO_ENABLE = no          # Audio output should be port E6, current quantum library hardcodes C6, which we use for programming
 
-DEFAULT_FOLDER = breadbord/3x12/bbts40
+DEFAULT_FOLDER = sk74key_modified_iso/sk74key_modified_iso
 
 
 DEBOUNCE_TYPE = eager_pk
